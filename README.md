@@ -86,15 +86,13 @@ st.empty(): This acts as a placeholder for the spinner, which is then populated 
 6. Dependency Injection: The main.py file creates an instance of ChatFromYourData from ingest_rag.py and stores it in the session state. It doesn't need to know the internal details of how the RAG chain works—it just calls the ingest_pdf, ingest_image, and ask methods. This is a good example of separating concerns and using an object-oriented approach in the frontend.
 
 
-Key Concepts for Understanding Chroma
-Chroma is a key component of this architecture, serving a specific function. An LLM engineer would understand its role in this context:
+Key Concepts for Understanding Chroma:
 
-Vector Store as "Long-Term Memory": Chroma acts as the long-term memory for the ChatFromYourData application. It's a dedicated database optimized for storing and searching vector embeddings. When a user asks a question, the retriever queries this database to find the most relevant information to augment the LLM's response.
+1. Vector Store as "Long-Term Memory": Chroma acts as the long-term memory for the ChatFromYourData application. It's a dedicated database optimized for storing and searching vector embeddings. When a user asks a question, the retriever queries this database to find the most relevant information to augment the LLM's response.
 
-In-Memory vs. Persistence: In its current form, Chroma is used in an in-memory mode. The self.vector_store = Chroma.from_documents(...) line in _update_vector_store initializes a new in-memory instance if one doesn't exist. To make this persistent across application restarts, the engineer would need to save the Chroma instance to disk by specifying a persist_directory. This is a common next step for production-ready RAG applications.
+2. In-Memory vs. Persistence: In its current form, Chroma is used in an in-memory mode. The self.vector_store = Chroma.from_documents(...) line in _update_vector_store initializes a new in-memory instance if one doesn't exist. To make this persistent across application restarts, the engineer would need to save the Chroma instance to disk by specifying a persist_directory. This is a common next step for production-ready RAG applications.
 
-Integration with Embedding Models: The code demonstrates how Chroma is tightly integrated with the embedding model (FastEmbedEmbeddings). When a document is ingested, Chroma uses this embedding model to convert text chunks into vectors before storing them. This tight coupling is what enables the semantic search capability.
-
+3. Integration with Embedding Models: The code demonstrates how Chroma is tightly integrated with the embedding model (FastEmbedEmbeddings). When a document is ingested, Chroma uses this embedding model to convert text chunks into vectors before storing them. This tight coupling is what enables the semantic search capability.
 
 Overall RAG concepts used:
 1. Retrieval-Augmented Generation (RAG) Architecture: The ChatFromYourData class is a textbook implementation of a RAG system. The workflow is a clear sequence of steps:
