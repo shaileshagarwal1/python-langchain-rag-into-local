@@ -3,6 +3,9 @@ import tempfile
 from typing import List, Optional, Set
 from langchain_community.vectorstores.chroma import Chroma
 from langchain_ollama import ChatOllama
+from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI # New Import
+from langchain_groq import ChatGroq # New Import
 from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from langchain.schema.output_parser import StrOutputParser
 from langchain_community.document_loaders.pdf import PyPDFLoader
@@ -22,12 +25,15 @@ import hashlib
 # Constants for the RAG chain
 CHUNK_SIZE = 1024
 CHUNK_OVERLAP = 100
-SEARCH_KWARGS = {
-    'k': 6,
+SEARCH_KWARTS = {
+    'k': 10,
     'score_threshold': 0.3
 }
-MODEL_NAME = "qwen3:1.7b"
-#MULTIMODAL_MODEL_NAME = "llava" # Recommended multimodal model
+OLLAMA_MODEL_NAME = "qwen3:1.7b"
+OPENAI_MODEL_NAME = "gpt-3.5-turbo"
+GEMINI_MODEL_NAME = "gemini-2.0-flash" # New constant
+GROQ_MODEL_NAME = "llama3-70b-8192" # New constant, Groq uses specific model names
+MULTIMODAL_MODEL_NAME = "llava" # Recommended multimodal model
 PROMPT_TEMPLATE = """
 [INST]<<SYS>> You are an assistant for question-answering tasks.
 Use the following pieces of retrieved context to answer the question.
@@ -45,9 +51,25 @@ class ChatFromYourData:
     chain: Optional[any] = None
     ingested_files: Set[str] = set()
 
-    def __init__(self):
-        self.model = ChatOllama(model=MODEL_NAME)
-        #self.multimodal_model = ChatOllama(model=MULTIMODAL_MODEL_NAME)
+    def __init__(self, llm_provider: str = "openai", api_key: Optional[str] = None):
+        if llm_provider == "ollama":
+            self.model = ChatOllama(model=OLLAMA_MODEL_NAME)
+        elif llm_provider == "openai":
+            if not api_key:
+                raise ValueError("OpenAI API key is required.")
+            self.model = ChatOpenAI(model=OPENAI_MODEL_NAME, api_key=api_key)
+        elif llm_provider == "gemini":
+            if not api_key:
+                raise ValueError("Gemini API key is required.")
+            self.model = ChatGoogleGenerativeAI(model=GEMINI_MODEL_NAME, api_key=api_key)
+        elif llm_provider == "groq3":
+            if not api_key:
+                raise ValueError("Groq API key is required.")
+            self.model = ChatGroq(model_name=GROQ_MODEL_NAME, groq_api_key=api_key)
+        else:
+            raise ValueError("Unsupported LLM provider. Please choose 'ollama', 'openai', 'gemini', or 'groq3'.")
+
+        self.multimodal_model = ChatOllama(model=MULTIMODAL_MODEL_NAME)
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=CHUNK_SIZE, 
             chunk_overlap=CHUNK_OVERLAP
@@ -70,7 +92,7 @@ class ChatFromYourData:
 
         self.retriever = self.vector_store.as_retriever(
             search_type="similarity_score_threshold",
-            search_kwargs=SEARCH_KWARGS,
+            search_kwargs=SEARCH_KWARTS,
         )
         self.chain = self._get_llm_chain()
     
