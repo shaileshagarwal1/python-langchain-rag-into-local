@@ -1,11 +1,22 @@
 import os
 import tempfile
 from typing import List, Optional, Set
+import hashlib
+import base64
+from PIL import Image
+from io import BytesIO
+
+# --- SQLite3 fix for Streamlit/ChromaDB compatibility ---
+# This is required to prevent a ModuleNotFoundError with sqlite3 on some systems.
+__import__('pysqlite3')
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+
 from langchain_community.vectorstores.chroma import Chroma
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
-from langchain_google_genai import ChatGoogleGenerativeAI # New Import
-from langchain_groq import ChatGroq # New Import
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from langchain.schema.output_parser import StrOutputParser
 from langchain_community.document_loaders.pdf import PyPDFLoader
