@@ -76,11 +76,6 @@ def process_input():
 
 
 def read_and_save_file():
-    # Remove the .clear() call to prevent resetting the vector store
-    # This was a regression in the previous code and has been fixed here.
-    # st.session_state["assistant"].clear() 
-    
-    # These two lines should remain to clear the chat history on new upload
     st.session_state["messages"] = []
     st.session_state["user_input"] = ""
     st.session_state["ingestion_complete"] = False
