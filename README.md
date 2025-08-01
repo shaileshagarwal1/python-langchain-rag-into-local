@@ -12,7 +12,7 @@
 <h1 align="center">Running Local RAG based on Langchain, Ollama, Chroma, Streamlit </h1>
 
   <p align="center">
-    Build your own RAG (chatPDF) and run it locally.
+    Build your own RAG (chatPDF) and run it locally and preserve all PDFs in Vector Store, irrespective of how many times you run.
   </p>
   <img src="images/Screenshot.png?raw=true" alt="sshot">
 
