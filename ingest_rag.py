@@ -50,7 +50,7 @@ PROMPT_TEMPLATE = """
 Use the following pieces of retrieved context to answer the question.
 If the context is empty or does not contain the answer, you should state that the information is not available in the provided documents.
 If you have general knowledge about the topic, you may provide a brief, high-level summary, but prioritize information from the context if it exists.
-Use mininum four to six sentences maximum and keep the answer concise.<</SYS>>
+Use mininum two to six sentences maximum and keep the answer concise.<</SYS>>
 Question: {question}
 Context: {context}
 Answer: [/INST]
