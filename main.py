@@ -7,14 +7,50 @@ from typing import List, Tuple
 
 st.set_page_config(page_title="ChatFromYourData")
 
+# --- Initialize session state with default values ---
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
 if "assistant" not in st.session_state:
-    st.session_state["assistant"] = ChatFromYourData()
+    st.session_state["assistant"] = None
 if "user_input" not in st.session_state:
     st.session_state["user_input"] = ""
 if "ingestion_complete" not in st.session_state:
     st.session_state["ingestion_complete"] = False
+if "llm_provider" not in st.session_state:
+    st.session_state["llm_provider"] = "openai" # Default to OpenAI
+if "api_key" not in st.session_state:
+    st.session_state["api_key"] = ""
+if "llm_configured" not in st.session_state:
+    st.session_state["llm_configured"] = False
+
+
+def configure_llm_callback():
+    """
+    Re-initializes the ChatFromYourData assistant when the LLM provider
+    or API key is changed.
+    """
+    api_key_valid = True
+    provider = st.session_state["llm_provider"]
+    api_key_required_providers = ["openai", "gemini", "groq3"]
+
+    # Use .get() to safely check for the API key
+    if provider in api_key_required_providers and not st.session_state.get("api_key"):
+        api_key_valid = False
+        st.error(f"Please enter a valid API key for {provider.upper()}.")
+    
+    if api_key_valid:
+        try:
+            st.session_state["assistant"] = ChatFromYourData(
+                llm_provider=provider,
+                # Use .get() here as well for safety
+                api_key=st.session_state.get("api_key") if provider in api_key_required_providers else None
+            )
+            st.session_state["llm_configured"] = True
+            st.success(f"LLM provider switched to {provider.upper()}!")
+        except ValueError as e:
+            st.error(f"Configuration Error: {e}")
+            st.session_state["llm_configured"] = False
+
 
 def display_messages():
     st.subheader("Chat")
@@ -40,7 +76,11 @@ def process_input():
 
 
 def read_and_save_file():
-    # commented: st.session_state["assistant"].clear()
+    # Remove the .clear() call to prevent resetting the vector store
+    # This was a regression in the previous code and has been fixed here.
+    # st.session_state["assistant"].clear() 
+    
+    # These two lines should remain to clear the chat history on new upload
     st.session_state["messages"] = []
     st.session_state["user_input"] = ""
     st.session_state["ingestion_complete"] = False
@@ -77,8 +117,37 @@ def read_and_save_file():
 
 
 def page():
-    st.header("Chat From PDF & Images")
+    # --- LLM Provider Selection UI ---
+    st.sidebar.header("LLM Configuration")
+    provider_options = ("openai", "ollama", "gemini", "groq3")
+    st.sidebar.radio(
+        "Choose LLM Provider:",
+        provider_options,
+        key="llm_provider",
+        on_change=configure_llm_callback
+    )
 
+    provider = st.session_state["llm_provider"]
+    api_key_required = provider in ["openai", "gemini", "groq3"]
+
+    if api_key_required:
+        st.sidebar.text_input(
+            f"{provider.upper()} API Key:",
+            type="password",
+            key="api_key",
+            on_change=configure_llm_callback
+        )
+        if provider == "openai":
+            st.sidebar.markdown("Don't have a key? [Get one here](https://platform.openai.com/api-keys)")
+        elif provider == "gemini":
+            st.sidebar.markdown("Don't have a key? [Get one here](https://aistudio.google.com/app/apikey)")
+        elif provider == "groq3":
+            st.sidebar.markdown("Don't have a key? [Get one here](https://console.groq.com/keys)")
+
+    if st.session_state["assistant"] is None or not st.session_state["llm_configured"]:
+        configure_llm_callback()
+
+    st.header("Chat From PDF & Images")
     st.subheader("Upload documents or images")
     st.file_uploader(
         "Upload document or image",
