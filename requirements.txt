@@ -6,3 +6,7 @@ pypdf
 fastembed
 langchain_community
 Pillow
+langchain-ollama
+langchain-openai
+langchain-google-genai
+langchain-groq
